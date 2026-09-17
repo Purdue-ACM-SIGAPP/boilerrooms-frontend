@@ -3,7 +3,7 @@ import { withBuildProperties } from "expo-build-properties";
 
 export default {
   expo: {
-    name: "ClientApp",
+    name: "Boiler Rooms",
     slug: "ClientApp",
     version: "1.0.0",
     newArchEnabled: true,

@@ -1,65 +1,44 @@
-import React from "react";
-import { View, Text } from "react-native";
+import React, { useEffect, useRef } from "react";
 import MapView, { Marker, Polygon } from "react-native-maps";
+import { MAP_DELTA } from "../constants/campus";
+import { colors } from "../theme";
+import { StyleSheet } from "react-native";
 
-const CustomMap = ({
-  markerPosition,
-  onMapPress,
-  highlightedBuildings,
-  onBuildingPress,
-}) => {
-  const handlePolygonPress = (building) => {
-    onBuildingPress(building); // Pass building data to parent component
-  };
+/**
+ * Native map with a center marker and tappable building outlines.
+ * highlightedBuildings: [{ buildingID, name?, coordinates: [{ latitude, longitude }] }]
+ */
+export default function CustomMap({ markerPosition, highlightedBuildings = [], onBuildingPress, onMapPress }) {
+  const mapRef = useRef(null);
+  const { latitude, longitude } = markerPosition;
 
-  // console.log("Highlighted  :", highlightedBuildings); // Log to check structure
-
-  // Ensure the coordinates are in the correct format
-  const parseCoordinates = (coordinates) =>
-    coordinates.map((coord) => ({
-      latitude: coord.latitude || coord.lat,
-      longitude: coord.longitude || coord.lng,
-    }));
-
-  if (highlightedBuildings && highlightedBuildings.length > 0) {
-    highlightedBuildings.forEach((building, index) => {
-      // console.log(
-      //   `Building ${index} Coordinates:`,
-      //   parseCoordinates(building.coordinates)
-      // );
-    });
-  } else {
-    console.log("No buildings available or highlightedBuildings is invalid.");
-  }
+  useEffect(() => {
+    mapRef.current?.animateToRegion({ latitude, longitude, ...MAP_DELTA });
+  }, [latitude, longitude]);
 
   return (
-    <View style={{ flex: 1 }}>
-      <MapView
-        style={{ flex: 1 }}
-        initialRegion={{
-          latitude: markerPosition.latitude,
-          longitude: markerPosition.longitude,
-          latitudeDelta: 0.01,
-          longitudeDelta: 0.01,
-        }}
-        onPress={(e) => onMapPress(e.nativeEvent.coordinate)}
-      >
-        <Marker coordinate={markerPosition} />
-        {/* Highlighted buildings using polygons */}
-        {highlightedBuildings.map((building, index) => (
-          <Polygon
-            key={index}
-            coordinates={parseCoordinates(building.coordinates)} // Array of coordinates outlining the building
-            fillColor="rgba(0, 128, 255, 0.3)" // Semi-transparent color to highlight the building
-            strokeColor="rgba(0, 128, 255, 1)" // Border color of the polygon
-            strokeWidth={2}
-            tappable={true} // Allow tapping on the polygon
-            onPress={() => handlePolygonPress(building)} // Handle polygon press
-          />
-        ))}
-      </MapView>
-    </View>
+    <MapView
+      ref={mapRef}
+      style={styles.map}
+      initialRegion={{ latitude, longitude, ...MAP_DELTA }}
+      onPress={(event) => onMapPress?.(event.nativeEvent.coordinate)}
+    >
+      <Marker coordinate={markerPosition} />
+      {highlightedBuildings.map((building, index) => (
+        <Polygon
+          key={`${building.buildingID}-${index}`}
+          coordinates={building.coordinates}
+          fillColor={colors.mapFill}
+          strokeColor={colors.mapStroke}
+          strokeWidth={2}
+          tappable
+          onPress={() => onBuildingPress?.(building)}
+        />
+      ))}
+    </MapView>
   );
-};
+}
 
-export default CustomMap;
+const styles = StyleSheet.create({
+  map: { flex: 1 },
+});

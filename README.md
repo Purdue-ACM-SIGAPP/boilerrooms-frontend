@@ -1,6 +1,6 @@
-# housing-frontend
+# Boiler Rooms Frontend
 
-Temp name (test)
+Expo (React Native) client for the Boiler Rooms API.
 
 #### Install dependencies
 
